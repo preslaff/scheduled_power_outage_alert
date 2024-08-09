@@ -106,12 +106,12 @@ def check_interruptions(driver, municipality, target_text, recipient_number):
             interruption_text = interruption.find_element(By.CSS_SELECTOR, 'div.text').text.strip()
             interruption_period = interruption.find_element(By.CSS_SELECTOR, 'div.period').text.strip()
             if target_text in interruption_text:
-                print("Match found!")
+                print(f"Match found for {target_text}!")
                 message_text = f"Period: {interruption_period}\nDetails: {interruption_text}"
                 send_whatsapp_message(message_text, recipient_number)
                 return
         
-        print("No matches found.")  # Debug statement
+        print(f"No matches found for {target_text}.")  # Debug statement
 
     finally:
         driver.quit()
