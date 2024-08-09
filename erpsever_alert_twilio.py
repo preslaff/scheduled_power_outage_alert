@@ -10,9 +10,9 @@ import time
 import schedule
 
 # Twilio credentials
-TWILIO_ACCOUNT_SID = "AC0821bfd24f229ec98834a840661232f7"  # Replace with your Twilio Account SID
-TWILIO_AUTH_TOKEN = "bc5750251e01709951d24f03f722de60"  # Replace with your Twilio Auth Token
-TWILIO_WHATSAPP_NUMBER = "whatsapp:+14155238886"  # Replace with your Twilio WhatsApp number
+TWILIO_ACCOUNT_SID = "Replace with your Twilio Account SID"  # Replace with your Twilio Account SID
+TWILIO_AUTH_TOKEN = "Replace with your Twilio Auth Token"  # Replace with your Twilio Auth Token
+TWILIO_WHATSAPP_NUMBER = "whatsapp:+your Twilio WhatsApp number"  # Replace with your Twilio WhatsApp number
 
 def setup_driver():
     # Set up the Chrome driver using WebDriverManager
