@@ -122,7 +122,7 @@ def job(municipality, target_text, recipient_number):
 
 if __name__ == "__main__":
     municipality = input("Въведете област (Варна, Велико Търново, Габрово, Добрич, Разград, Русе, Силистра Търговище, Шумен): ")
-    target_text = input("Въведете место (улица, име на село или име на бизнес абонат ): ")
+    target_text = input("Въведете място (улица, име на село или име на бизнес абонат ): ")
     recipient_number = input("Въведете Whatsapp номер (във формат +359456557890): ")
 
     # Schedule the job to run every hour
