@@ -1,8 +1,8 @@
-# Scheduled Power Outage Alert for the customers of ERP SEVER in Bulgaria
-This is an automation script which alerts the customers of ERP SEVER by whatsapp for scheduled power outages (https://www.energo-pro.bg/bg/planirani-prekysvanija)
+# Scheduled Power Outage Alert for the customers of Electrodistribution North AD in Bulgaria
+This is an automation script which alerts the customers of Electrodistribution North AD by whatsapp for scheduled power outages (https://www.energo-pro.bg/bg/planirani-prekysvanija)
 
 ## Abstsract
-Giving the short-sightedness of the ERP SEVER management, there is no any practical way to be warned when the company performs their scheduled repairs of the power grid that they support. This leads to numerous difficulties for ordinary and business users, because they do not know in advance when and for how long they will be without electricity. They publish the information 48 hours before the outage on their web site in  a very inappropriate and difficult to automate data format. This simple service provides a way for electricity consumers to subscribe to notifications about upcoming power outages by specifying their area, town and phone number. It simulates a web browser (the only way to access such important information!) using the selenium lib to access the scheduled power outages.
+Giving the short-sightedness of the Electrodistribution North AD management, there is no any practical way to be warned when the company performs their scheduled repairs of the power grid that they support. This leads to numerous difficulties for ordinary and business users, because they do not know in advance when and for how long they will be without electricity. They publish the information 48 hours before the outage on their web site in  a very inappropriate and difficult to automate data format. This simple service provides a way for electricity consumers to subscribe to notifications about upcoming power outages by specifying their area, town and phone number. It simulates a web browser (the only way to access such important information!) using the selenium lib to access the scheduled power outages.
 
 ## How to install
 1. First you need to install the needed python libraries: `pip install selenuim pywhatkit schedule webdriver_manager`
