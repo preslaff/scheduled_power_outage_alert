@@ -14,11 +14,3 @@ The script uses `pywhatkit` and that's why you have to open your Whatsapp accoun
 
 ## Using the `erpsever_extract_all.py`
 This scipt extracts all the interruption messages for all areas and puts them in an `csv` file for further processing. Thе scv file cqn be used as a database for a prefered front-end.
-
-## Using the `erpsever_alert_email`
-The script sends an email message when and interruption is detected on the site of Electrodistribution North AD. The script uses the defined environment variables 
-    `municipality = os.getenv("MUNICIPALITY", "default_municipality")
-    target_text = os.getenv("TARGET_TEXT", "default_target_text")
-    recipient_email = os.getenv("RECIPIENT_EMAIL", "default_recipient_email")`
-
-in the Ubuntu systemd service as input.
