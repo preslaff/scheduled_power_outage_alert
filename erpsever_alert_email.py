@@ -1,5 +1,5 @@
-import requests
-from twilio.rest import Client
+import subprocess
+import os
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
@@ -9,10 +9,7 @@ from webdriver_manager.chrome import ChromeDriverManager
 import time
 import schedule
 
-# Twilio credentials
-TWILIO_ACCOUNT_SID = "Replace with your Twilio Account SID"  # Replace with your Twilio Account SID
-TWILIO_AUTH_TOKEN = "Replace with your Twilio Auth Token"  # Replace with your Twilio Auth Token
-TWILIO_WHATSAPP_NUMBER = "whatsapp:+your Twilio WhatsApp number"  # Replace with your Twilio WhatsApp number
+LAST_MESSAGE_FILE = "last_message.txt"
 
 def setup_driver():
     # Set up the Chrome driver using WebDriverManager
@@ -32,19 +29,30 @@ def check_element_presence(driver, css_selector, description):
     print(f"{description} found: {element.tag_name}")
     return element
 
-def send_whatsapp_message(text, recipient_number):
-    client = Client(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN)
+def send_email(subject, body, recipient_email):
     try:
-        message = client.messages.create(
-            body=text,
-            from_=TWILIO_WHATSAPP_NUMBER,
-            to=f"whatsapp:{recipient_number}"
-        )
-        print(f"WhatsApp message sent to {recipient_number}")
+        # Prepare the message
+        message = f"Subject: {subject}\n\n{body}"
+        
+        # Use sendmail to send the email
+        process = subprocess.Popen(['sendmail', recipient_email], stdin=subprocess.PIPE)
+        process.communicate(message.encode('utf-8'))
+        
+        print(f"Email sent to {recipient_email}")
     except Exception as e:
-        print(f"Failed to send WhatsApp message: {e}")
+        print(f"Failed to send email: {e}")
 
-def check_interruptions(driver, municipality, target_text, recipient_number):
+def get_last_sent_message():
+    if os.path.exists(LAST_MESSAGE_FILE):
+        with open(LAST_MESSAGE_FILE, 'r', encoding='utf-8') as file:
+            return file.read().strip()
+    return None
+
+def set_last_sent_message(message):
+    with open(LAST_MESSAGE_FILE, 'w', encoding='utf-8') as file:
+        file.write(message)
+
+def check_interruptions(driver, municipality, target_text, recipient_email):
     try:
         url = 'https://www.energo-pro.bg/bg/planirani-prekysvanija'
         driver.get(url)
@@ -58,10 +66,10 @@ def check_interruptions(driver, municipality, target_text, recipient_number):
         check_element_presence(driver, 'body > div.table.site-table > main > section:nth-of-type(2)', 'Second section')
         check_element_presence(driver, 'body > div.table.site-table > main > section:nth-of-type(2) > div.wrapper', 'Wrapper div')
 
-        # Output the current page source for debugging
-        page_source = driver.page_source
-        with open("page_source.html", "w", encoding="utf-8") as file:
-            file.write(page_source)
+        # # Output the current page source for debugging
+        # page_source = driver.page_source
+        # with open("page_source.html", "w", encoding="utf-8") as file:
+        #     file.write(page_source)
 
         # Check for the modal overlay and close it if it exists
         try:
@@ -115,10 +123,15 @@ def check_interruptions(driver, municipality, target_text, recipient_number):
         for interruption in interruptions:
             interruption_text = interruption.find_element(By.CSS_SELECTOR, 'div.text').text.strip()
             interruption_period = interruption.find_element(By.CSS_SELECTOR, 'div.period').text.strip()
+            message_text = f"Period: {interruption_period}\nDetails: {interruption_text}"
             if target_text in interruption_text:
                 print("Match found!")
-                message_text = f"Period: {interruption_period}\nDetails: {interruption_text}"
-                send_whatsapp_message(message_text, recipient_number)
+                last_message = get_last_sent_message()
+                if message_text != last_message:
+                    send_email(f"Interruption Alert for {target_text}", message_text, recipient_email)
+                    set_last_sent_message(message_text)
+                else:
+                    print("Message already sent. Skipping.")
                 return
         
         print("No matches found.")  # Debug statement
@@ -126,18 +139,20 @@ def check_interruptions(driver, municipality, target_text, recipient_number):
     finally:
         driver.quit()
 
-def job(municipality, target_text, recipient_number):
+def job(municipality, target_text, recipient_email):
     driver = setup_driver()
-    check_interruptions(driver, municipality, target_text, recipient_number)
+    check_interruptions(driver, municipality, target_text, recipient_email)
 
 if __name__ == "__main__":
-    municipality = input("Enter the municipality to check for interruptions: ")
-    target_text = input("Enter the specific place of interest: ")
-    recipient_number = input("Enter the WhatsApp recipient number: ")
+    municipality = os.getenv("MUNICIPALITY", "default_municipality")
+    target_text = os.getenv("TARGET_TEXT", "default_target_text")
+    recipient_email = os.getenv("RECIPIENT_EMAIL", "default_recipient_email")
 
-    # Schedule the job to run every hour
-    schedule.every().hour.do(job, municipality, target_text, recipient_number)
+    # Schedule the job to run every 5 minutes
+    # schedule.every(5).minutes.do(job, municipality, target_text, recipient_email)
 
+    schedule.every(2).hour.do(job, municipality, target_text, recipient_email)
+    
     print("Service started...")
 
     while True:

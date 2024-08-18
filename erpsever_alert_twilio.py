@@ -58,10 +58,10 @@ def check_interruptions(driver, municipality, target_text, recipient_number):
         check_element_presence(driver, 'body > div.table.site-table > main > section:nth-of-type(2)', 'Second section')
         check_element_presence(driver, 'body > div.table.site-table > main > section:nth-of-type(2) > div.wrapper', 'Wrapper div')
 
-        # Output the current page source for debugging
-        page_source = driver.page_source
-        with open("page_source.html", "w", encoding="utf-8") as file:
-            file.write(page_source)
+        # # Output the current page source for debugging
+        # page_source = driver.page_source
+        # with open("page_source.html", "w", encoding="utf-8") as file:
+        #     file.write(page_source)
 
         # Check for the modal overlay and close it if it exists
         try:
