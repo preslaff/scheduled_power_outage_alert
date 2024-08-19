@@ -1,3 +1,4 @@
+import os
 import requests
 from twilio.rest import Client
 from selenium import webdriver
@@ -8,11 +9,14 @@ from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 import time
 import schedule
+import sys
+
+sys.stdout = sys.stderr
 
 # Twilio credentials
 TWILIO_ACCOUNT_SID = "Replace with your Twilio Account SID"  # Replace with your Twilio Account SID
 TWILIO_AUTH_TOKEN = "Replace with your Twilio Auth Token"  # Replace with your Twilio Auth Token
-TWILIO_WHATSAPP_NUMBER = "whatsapp:+your Twilio WhatsApp number"  # Replace with your Twilio WhatsApp number
+TWILIO_WHATSAPP_NUMBER = "Replace with your Twilio WhatsApp number"  # Replace with your Twilio WhatsApp number
 
 def setup_driver():
     # Set up the Chrome driver using WebDriverManager
@@ -57,11 +61,6 @@ def check_interruptions(driver, municipality, target_text, recipient_number):
         check_element_presence(driver, 'body > div.table.site-table > main', 'Main tag')
         check_element_presence(driver, 'body > div.table.site-table > main > section:nth-of-type(2)', 'Second section')
         check_element_presence(driver, 'body > div.table.site-table > main > section:nth-of-type(2) > div.wrapper', 'Wrapper div')
-
-        # # Output the current page source for debugging
-        # page_source = driver.page_source
-        # with open("page_source.html", "w", encoding="utf-8") as file:
-        #     file.write(page_source)
 
         # Check for the modal overlay and close it if it exists
         try:
@@ -109,9 +108,9 @@ def check_interruptions(driver, municipality, target_text, recipient_number):
         interruptions = driver.find_elements(
             By.CSS_SELECTOR, 'body > div.table.site-table > main > section:nth-of-type(2) div.wrapper div.interruption-data ul#interruption_areas li[data-interruption="for_next_48_hours"]'
         )
-        
+
         print(f"Found {len(interruptions)} interruption entries.")  # Debug statement
-        
+
         for interruption in interruptions:
             interruption_text = interruption.find_element(By.CSS_SELECTOR, 'div.text').text.strip()
             interruption_period = interruption.find_element(By.CSS_SELECTOR, 'div.period').text.strip()
@@ -120,7 +119,7 @@ def check_interruptions(driver, municipality, target_text, recipient_number):
                 message_text = f"Period: {interruption_period}\nDetails: {interruption_text}"
                 send_whatsapp_message(message_text, recipient_number)
                 return
-        
+
         print("No matches found.")  # Debug statement
 
     finally:
@@ -131,12 +130,15 @@ def job(municipality, target_text, recipient_number):
     check_interruptions(driver, municipality, target_text, recipient_number)
 
 if __name__ == "__main__":
-    municipality = input("Enter the municipality to check for interruptions: ")
-    target_text = input("Enter the specific place of interest: ")
-    recipient_number = input("Enter the WhatsApp recipient number: ")
+    municipality = os.getenv("MUNICIPALITY", "default_municipality")
+    target_text = os.getenv("TARGET_TEXT", "default_target_text")
+    recipient_number = os.getenv("RECIPIENT_NUMBER", "default_recipient_number")
 
     # Schedule the job to run every hour
     schedule.every().hour.do(job, municipality, target_text, recipient_number)
+
+    # # Schedule the job to run every 5 minutes
+    #schedule.every(5).minutes.do(job, municipality, target_text, recipient_number)
 
     print("Service started...")
 
