@@ -8,9 +8,6 @@ from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 import time
 import schedule
-import sys
-
-sys.stdout = sys.stderr
 
 LAST_MESSAGE_FILE = "last_message.txt"
 
@@ -64,34 +61,31 @@ def check_interruptions(driver, municipality, target_text, recipient_email):
         check_element_presence(driver, 'div.map-interruptions', 'Map Interruptions div')
         time.sleep(2)  # Give additional time for dynamic content to load
 
-        check_element_presence(driver, 'body > div.table.site-table', 'Main table div')
+        
         check_element_presence(driver, 'body > div.table.site-table > main', 'Main tag')
         check_element_presence(driver, 'body > div.table.site-table > main > section:nth-of-type(2)', 'Second section')
         check_element_presence(driver, 'body > div.table.site-table > main > section:nth-of-type(2) > div.wrapper', 'Wrapper div')
 
-        # # Output the current page source for debugging
-        # page_source = driver.page_source
-        # with open("page_source.html", "w", encoding="utf-8") as file:
-        #     file.write(page_source)
-
-        # Check for the modal overlay and close it if it exists
+       # Check for the modal overlay and close it if it exists
         try:
             modal_overlay = driver.find_element(By.CSS_SELECTOR, 'div.modal-overlay')
             if modal_overlay.is_displayed():
                 print("Modal overlay detected. Attempting to close.")
                 driver.execute_script("arguments[0].click();", modal_overlay)
-                time.sleep(2)  # Give some time for the modal to close
+                time.sleep()  # Give some time for the modal to close
         except Exception as e:
             print(f"No modal overlay found or error occurred: {e}")
 
+                
         # Find and click the desired municipality
-        area_items = driver.find_elements(By.CSS_SELECTOR, 'div.map-interruptions > div.sidebar > div.areas > div.item')
+        area_items = driver.find_elements(By.CSS_SELECTOR, 'div.item')
 
         clicked = False
         for item in area_items:
-            area = item.find_element(By.TAG_NAME, 'strong').text
-            if area == municipality:
-                print(f"Found and clicking on municipality: {area}")
+            area_text = item.get_attribute('innerText').strip()  # Get the inner text of the item
+            print(f"Found area: {area_text}")  # Debug: Print the area name
+            if municipality in area_text:  # Check if the municipality name is part of the text
+                print(f"Found and clicking on municipality: {area_text}")
                 driver.execute_script("arguments[0].click();", item)
                 clicked = True
                 break
@@ -123,20 +117,26 @@ def check_interruptions(driver, municipality, target_text, recipient_email):
         
         print(f"Found {len(interruptions)} interruption entries.")  # Debug statement
         
+        if not interruptions:
+            print("No planned power interruptions found.")  # Message if no interruptions are found
+
         for interruption in interruptions:
-            interruption_text = interruption.find_element(By.CSS_SELECTOR, 'div.text').text.strip()
-            interruption_period = interruption.find_element(By.CSS_SELECTOR, 'div.period').text.strip()
-            message_text = f"Period: {interruption_period}\nDetails: {interruption_text}"
-            if target_text in interruption_text:
-                print("Match found!")
-                last_message = get_last_sent_message()
-                if message_text != last_message:
-                    send_email(f"Interruption Alert for {target_text}", message_text, recipient_email)
-                    set_last_sent_message(message_text)
-                else:
-                    print("Message already sent. Skipping.")
-                return
-        
+            try:
+                interruption_text = interruption.find_element(By.CSS_SELECTOR, 'div.text').text.strip()
+                interruption_period = interruption.find_element(By.CSS_SELECTOR, 'div.period').text.strip()
+                message_text = f"Period: {interruption_period}\nDetails: {interruption_text}"
+                if target_text in interruption_text:
+                    print("Match found!")
+                    last_message = get_last_sent_message()
+                    if message_text != last_message:
+                        send_email(f"Interruption Alert for {target_text}", message_text, recipient_email)
+                        set_last_sent_message(message_text)
+                    else:
+                        print("Message already sent. Skipping.")
+                    return
+            except Exception as e:
+                print(f"Failed to retrieve interruption details: {e}")
+
         print("No matches found.")  # Debug statement
 
     finally:
@@ -152,9 +152,7 @@ if __name__ == "__main__":
     recipient_email = os.getenv("RECIPIENT_EMAIL", "default_recipient_email")
 
     # Schedule the job to run every 5 minutes
-    # schedule.every(5).minutes.do(job, municipality, target_text, recipient_email)
-
-    schedule.every(2).hour.do(job, municipality, target_text, recipient_email)
+    schedule.every(1).minutes.do(job, municipality, target_text, recipient_email)
     
     print("Service started...")
 
